@@ -3,8 +3,6 @@ layout: post
 title: Smart Pointers in C++
 ---
 
-**What are smart pointers?**
-
 Smart pointers are nothing more than a simple wrapper around regular pointer types in C++, which ensure that an object is automatically deleted when it’s not being used anymore. Long story short, they are an extremely powerful tool to prevent memory leaks.
 
 Let’s take a very simple C++ structure to demonstrate the power of smart pointers.
