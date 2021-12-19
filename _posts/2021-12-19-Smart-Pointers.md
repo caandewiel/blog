@@ -11,39 +11,33 @@ Let’s take a very simple C++ structure to demonstrate the power of smart point
 
 ```cpp
 struct Object {
-    Object() {
-        std::cout << "Creating new Object\n";
-    }
-    ~Object() {
-        std::cout << "Destroying Object\n";
-    }
-    
-    uint64_t someAttribute;
+  Object() { std::cout << "Creating new Object\n"; }
+  ~Object() { std::cout << "Destroying Object\n"; }
+
+  uint64_t someAttribute;
 };
 ```
 
 In old school C++ we would do a heap allocation using the `new` keyword. This will conveniently allocate some memory on the heap for us and return a pointer to the object. However, C++ does require you to *explicitly* call the destructor when the object is not used anymore. The keyword to do this is `delete`, this is similar to `malloc` and `free` respectively. If you fail to do this, you introduce a so called memory leak. This is the situation where memory on the heap is allocated with data that is not being used anymore. Imagine that you allocate these objects iteratively. After a while you will run out of memory! This situation is described by the following code snippet.
 
 ```cpp
-void doSomething()
-{
-    // Allocate an instance of Object on the heap
-    auto* object = new Object();
+void doSomething() {
+  // Allocate an instance of Object on the heap
+  auto* object = new Object();
 }
 
-int main()
-{
-    doSomething();
-    
-    // Memory is not freed here, thus causing a memory leak
-    return 0;
+int main() {
+  doSomething();
+
+  // Memory is not freed here, thus causing a memory leak
+  return 0;
 }
 ```
 
 Running this piece of code results in the following output. We can see here that only the constructor is called, meaning that the object is still alive after we get out of scope of the main function.
 
-```bash
-Creating new Object
+```shell
+> Creating new Object
 ```
 
 Since C++ 11, we have smart pointers to take care of freeing up memory for us! When it comes to smart pointers, it’s intuitive to think of ownerships. But what does it mean for an instance to *own* another instance? Say we have an instance `a` which is the owner of instance `b`. Then instance `b` can never outlive instance `a`. In other words, when instance `a` is destroyed, instance `b` is destroyed as well.
@@ -54,32 +48,27 @@ The first smart pointer we will cover is a unique pointer, defined by `std::uniq
 
 ```cpp
 struct A {
-    A() {
-        std::cout << "Creating new A\n";
-    }
-    ~A() {
-        std::cout << "Destroying A\n";
-    }
-    
-		uint64_t someAttribute;
+  A() { std::cout << "Creating new A\n"; }
+  ~A() { std::cout << "Destroying A\n"; }
+
+  uint64_t someAttribute;
 };
 
 struct B {
-		std::unique_ptr<A> a;
+  std::unique_ptr<A> a;
 };
 
-int main()
-{
-		B b;
-		b.a = std::unique_ptr<A>(new A());
+int main() {
+  B b;
+  b.a = std::unique_ptr<A>(new A());
 }
 ```
 
 Here instance `b` of type `B` has an attribute `a` of type `std::unique_ptr<A>`. This means that `b` is the owner of `a`. Since `b` is allocated on the stack, it will automatically be destroyed when it gets out of the current scope. All smart pointers do, is destroy the object corresponding to the pointer when it has no owners anymore. Since `a` is a unique pointer, it can only have **one** owner, which in this case is `b`. This means that when the destructor of `b` is called, the destructor of `a` will be called automatically. When we run this piece of code, we get the following output.
 
-```bash
-Creating new A
-Destroying A
+```shell
+> Creating new A
+> Destroying A
 ```
 
 We can see that *without* calling the `delete` function on `a`, the destructor is still called. This is extremely useful when your codebase becomes larger and it gets harder to keep track of all pointers you have floating around.
@@ -91,13 +80,12 @@ It might sound complicated, but actually, it is a very simple yet powerful conce
 ```cpp
 template <typename T>
 class unique_ptr {
-public:
-    unique_ptr(T* t): m_pointer(t) {}
-    ~unique_ptr() {
-        delete m_pointer;
-    }
-private:
-    T* m_pointer;
+ public:
+  unique_ptr(T* t) : m_pointer(t) {}
+  ~unique_ptr() { delete m_pointer; }
+
+ private:
+  T* m_pointer;
 };
 ```
 
@@ -114,11 +102,11 @@ auto b = a;
 
 We copy the value of `a` here into a variable `b`. This program compiles just fine, but during runtime we spot something interesting! The output of the aforementioned program is.
 
-```bash
-Creating new A
-Destroying A
-Destroying A
-free(): double free detected in tcache 2
+```shell
+> Creating new A
+> Destroying A
+> Destroying A
+> free(): double free detected in tcache 2
 ```
 
 We see here that our program attempts to free the same pointer twice, why is that? Well, we have two unique pointers pointing to the same address. However, the destructor of `A` is called twice, once by `a` and once by `b`. Therefore our program attempts to free the pointer twice. So how do we avoid this problem? Well, it’s a simple fix! We just prevent our unique pointers from being copied.
@@ -126,25 +114,24 @@ We see here that our program attempts to free the same pointer twice, why is tha
 ```cpp
 template <typename T>
 class unique_ptr {
-public:
-    unique_ptr(T* t): m_pointer(t) {}
-    ~unique_ptr() {
-        delete m_pointer;
-    }
+ public:
+  unique_ptr(T* t) : m_pointer(t) {}
+  ~unique_ptr() { delete m_pointer; }
 
-		// Remove the copy constructor and operator
-		unique_ptr(const unique_ptr<T>&) = delete;
-    unique_ptr<T>& operator=(const unique_ptr<T>&) = delete;
-private:
-    T* m_pointer;
+  // Remove the copy constructor and operator
+  unique_ptr(const unique_ptr<T>&) = delete;
+  unique_ptr<T>& operator=(const unique_ptr<T>&) = delete;
+
+ private:
+  T* m_pointer;
 };
 ```
 
 When we try to compile our program with our updated unique pointer, we get the following compilation error telling us that we are trying to call a deleted function, which in this case is the copy constructor.
 
 ```bash
-error: use of deleted function ‘unique_ptr::unique_ptr(const unique_ptr&) [with T = A]’
-auto b = a;
+> error: use of deleted function ‘unique_ptr::unique_ptr(const unique_ptr&) [with T = A]’
+  auto b = a;
 ```
 
 I hear you ask, so how do I change ownership if I cannot copy the unique pointer? Well, C++ also has a very convenient function to overcome that problem, namely `std::move()`. This function basically casts your lvalue to an rvalue, which will thus use the move constructor `unique_ptr(const unique_ptr&&)` instead of our deleted copy constructor. In order to add support for this, we need to add the move constructor.
@@ -152,28 +139,27 @@ I hear you ask, so how do I change ownership if I cannot copy the unique pointer
 ```cpp
 template <typename T>
 class unique_ptr {
-public:
-    unique_ptr(T* t): m_pointer(t) {}
-    ~unique_ptr() {
-        delete m_pointer;
-    }
-    
-		// Remove the copy constructor and operator
-    unique_ptr(const unique_ptr<T>&) = delete;
-		unique_ptr<T>& operator=(const unique_ptr<T>&) = delete;    
-		
-		// Define the move constructor and operator
-		unique_ptr(unique_ptr<T>&& other) {
-        m_pointer = other.m_pointer;
-        other.m_pointer = nullptr;
-    }
-    unique_ptr<T>& operator=(unique_ptr<T>&& other) {
-        m_pointer = other.m_pointer;
-        other.m_pointer = nullptr;
-        return this;
-    }
-private:
-    T* m_pointer;
+ public:
+  unique_ptr(T* t) : m_pointer(t) {}
+  ~unique_ptr() { delete m_pointer; }
+
+  // Remove the copy constructor and operator
+  unique_ptr(const unique_ptr<T>&) = delete;
+  unique_ptr<T>& operator=(const unique_ptr<T>&) = delete;
+
+  // Define the move constructor and operator
+  unique_ptr(unique_ptr<T>&& other) {
+    m_pointer = other.m_pointer;
+    other.m_pointer = nullptr;
+  }
+  unique_ptr<T>& operator=(unique_ptr<T>&& other) {
+    m_pointer = other.m_pointer;
+    other.m_pointer = nullptr;
+    return this;
+  }
+
+ private:
+  T* m_pointer;
 };
 ```
 
@@ -190,62 +176,65 @@ Next to unique pointers, there are also shared pointers. They are almost identic
 
 ```cpp
 struct counter {
-    uint64_t count = 1;
+  uint64_t count = 1;
 };
 
 template <typename T>
 class shared_ptr {
-public:
-    shared_ptr(T* t): m_pointer(t) {
-        m_counter = new counter();
-        std::cout << "Created shared pointer\n";
-        std::cout << "Shared pointer has " << m_counter->count << " active owners\n";
-    }
-    ~shared_ptr() {
-        std::cout << "Destructor of shared pointer was called.\n";
-        m_counter->count--;
-        std::cout << "Shared pointer has " << m_counter->count << " active owners\n";
-        
-        if (m_counter->count == 0) {
-            std::cout << "Freeing shared pointer.\n";
-            delete m_pointer;
-            delete m_counter;
-        }
-    }
+ public:
+  shared_ptr(T* t) : m_pointer(t) {
+    m_counter = new counter();
+    std::cout << "Created shared pointer\n";
+    std::cout << "Shared pointer has " << m_counter->count
+              << " active owners\n";
+  }
+  ~shared_ptr() {
+    std::cout << "Destructor of shared pointer was called.\n";
+    m_counter->count--;
+    std::cout << "Shared pointer has " << m_counter->count
+              << " active owners\n";
 
-		T* get() {
-        return m_pointer;
+    if (m_counter->count == 0) {
+      std::cout << "Freeing shared pointer.\n";
+      delete m_pointer;
+      delete m_counter;
     }
-    
-		// Define the copy constructor and operator
-	  shared_ptr(shared_ptr<T>& other) {
-	      m_pointer = other.m_pointer;
-	      other.m_counter->count++;
-		    m_counter = other.m_counter;
-	      std::cout << "Shared pointer has " << m_counter->count << " active owners\n";
-	  }
-		shared_ptr<T>& operator=(shared_ptr<T>& other) {
-		    m_pointer = other.m_pointer;
-		    other.m_counter->count++;
-		    m_counter = other.m_counter;
-		    std::cout << "Shared pointer has " << m_counter->count << " active owners\n";
-				return *this;
-		}    
-			
-		// Define the move constructor and operator
-		shared_ptr(shared_ptr<T>&& other) {
-	      m_pointer = other.m_pointer;
-	      other.m_pointer = nullptr;
-	  }
-	    
-	  shared_ptr<T>& operator=(shared_ptr<T>&& other) {
-		    m_pointer = other.m_pointer;
-		    other.m_pointer = nullptr;
-		    return *this;
-	  }
-private:
-    T* m_pointer;
-    counter* m_counter;
+  }
+
+  T* get() { return m_pointer; }
+
+  // Define the copy constructor and operator
+  shared_ptr(shared_ptr<T>& other) {
+    m_pointer = other.m_pointer;
+    other.m_counter->count++;
+    m_counter = other.m_counter;
+    std::cout << "Shared pointer has " << m_counter->count
+              << " active owners\n";
+  }
+  shared_ptr<T>& operator=(shared_ptr<T>& other) {
+    m_pointer = other.m_pointer;
+    other.m_counter->count++;
+    m_counter = other.m_counter;
+    std::cout << "Shared pointer has " << m_counter->count
+              << " active owners\n";
+    return *this;
+  }
+
+  // Define the move constructor and operator
+  shared_ptr(shared_ptr<T>&& other) {
+    m_pointer = other.m_pointer;
+    other.m_pointer = nullptr;
+  }
+
+  shared_ptr<T>& operator=(shared_ptr<T>&& other) {
+    m_pointer = other.m_pointer;
+    other.m_pointer = nullptr;
+    return *this;
+  }
+
+ private:
+  T* m_pointer;
+  counter* m_counter;
 };
 ```
 
@@ -256,17 +245,17 @@ auto a = shared_ptr<A>(new A());
 auto b = a;
 ```
 
-```bash
-Creating new A
-Created shared pointer
-Shared pointer has 1 active owners
-Shared pointer has 2 active owners
-Destructor of shared pointer was called.
-Shared pointer has 1 active owners
-Destructor of shared pointer was called.
-Shared pointer has 0 active owners
-Freeing shared pointer.
-Destroying A
+```shell
+> Creating new A
+> Created shared pointer
+> Shared pointer has 1 active owners
+> Shared pointer has 2 active owners
+> Destructor of shared pointer was called.
+> Shared pointer has 1 active owners
+> Destructor of shared pointer was called.
+> Shared pointer has 0 active owners
+> Freeing shared pointer.
+> Destroying A
 ```
 
 **Weak pointers**
@@ -275,15 +264,11 @@ The weak pointer is the last type of smart pointer we find in C++. A weak pointe
 
 ```cpp
 struct Node {
-    Node() {
-        std::cout << "Creating new Node\n";
-    }
-    ~Node() {
-        std::cout << "Destroying Node\n";
-    }
-    
-		shared_ptr<Node> next;
-		shared_ptr<Node> previous;
+  Node() { std::cout << "Creating new Node\n"; }
+  ~Node() { std::cout << "Destroying Node\n"; }
+
+  shared_ptr<Node> next;
+  shared_ptr<Node> previous;
 };
 
 auto initial = shared_ptr<Node>(new Node());
@@ -293,84 +278,79 @@ initial.get()->next.get()->previous = initial;
 
 This creates two nodes, but none of these get destroyed as their cyclic dependency keeps the counter greater than 0. When we run the aforementioned code, we get the following output.
 
-```cpp
-Creating new Node
-Creating new Node
+```shell
+> Creating new Node
+> Creating new Node
 ```
 
 Let’s rewrite our implementation to use weak pointers. The implementation for weak pointers is almost identical to that one of shared pointers, but without the counter logic. We end up with the following implementation.
 
 ```cpp
-// Declare weak_ptr as friend class of shared_ptr, so we can read private members.
+// Declare weak_ptr as friend class of shared_ptr, so we can read private
+// members.
 template <typename T>
 class weak_ptr {
-public:
-    weak_ptr() = default;
-    weak_ptr(shared_ptr<T> other) {
-        m_pointer = other.m_pointer;
-        m_counter = other.m_counter;
-    
+ public:
+  weak_ptr() = default;
+  weak_ptr(shared_ptr<T> other) {
+    m_pointer = other.m_pointer;
+    m_counter = other.m_counter;
+
     ~weak_ptr() = default;
-    
-    T* get() {
-        return m_pointer;
+
+    T* get() { return m_pointer; }
+
+    // Define the copy constructor and operator
+    weak_ptr(weak_ptr<T> & other) {
+      m_pointer = other.m_pointer;
+      m_counter = other.m_counter;
     }
-    
-		// Define the copy constructor and operator
-    weak_ptr(weak_ptr<T>& other) {
-        m_pointer = other.m_pointer;
-		    m_counter = other.m_counter;
+    weak_ptr<T>& operator=(weak_ptr<T> & other) {
+      m_pointer = other.m_pointer;
+      m_counter = other.m_counter;
+      return *this;
     }
-		weak_ptr<T>& operator=(weak_ptr<T>& other) {
-		    m_pointer = other.m_pointer;
-		    m_counter = other.m_counter;
-		    return *this;
-		}    
-		
-		// Define the move constructor and operator
-		weak_ptr(weak_ptr<T>&& other) {
-        m_pointer = other.m_pointer;
-        other.m_pointer = nullptr;
+
+    // Define the move constructor and operator
+    weak_ptr(weak_ptr<T> && other) {
+      m_pointer = other.m_pointer;
+      other.m_pointer = nullptr;
     }
-    
-    weak_ptr<T>& operator=(weak_ptr<T>&& other) {
-        m_pointer = other.m_pointer;
-        other.m_pointer = nullptr;
-        return *this;
+
+    weak_ptr<T>& operator=(weak_ptr<T> && other) {
+      m_pointer = other.m_pointer;
+      other.m_pointer = nullptr;
+      return *this;
     }
-private:
+
+   private:
     T* m_pointer;
     counter* m_counter;
-};
+  };
 
-struct Node {
-    Node() {
-        std::cout << "Creating new Node\n";
-    }
-    ~Node() {
-        std::cout << "Destroying Node\n";
-    }
-    
-		shared_ptr<Node> next;
-		weak_ptr<Node> previous;
-};
+  struct Node {
+    Node() { std::cout << "Creating new Node\n"; }
+    ~Node() { std::cout << "Destroying Node\n"; }
 
-int main()
-{
-	auto initial = shared_ptr<Node>(new Node());
-	auto next = shared_ptr<Node>(new Node());
-	initial.get()->next = next;
-	initial.get()->next.get()->previous = initial;
-}
+    shared_ptr<Node> next;
+    weak_ptr<Node> previous;
+  };
+
+  int main() {
+    auto initial = shared_ptr<Node>(new Node());
+    auto next = shared_ptr<Node>(new Node());
+    initial.get()->next = next;
+    initial.get()->next.get()->previous = initial;
+  }
 ```
 
 This gives us the desired result.
 
-```bash
-Creating new Node
-Creating new Node
-Destroying Node
-Destroying Node
+```shell
+> Creating new Node
+> Creating new Node
+> Destroying Node
+> Destroying Node
 ```
 
 **Conclusion**
