@@ -293,53 +293,54 @@ class weak_ptr {
   weak_ptr(shared_ptr<T> other) {
     m_pointer = other.m_pointer;
     m_counter = other.m_counter;
-
-    ~weak_ptr() = default;
-
-    T* get() { return m_pointer; }
-
-    // Define the copy constructor and operator
-    weak_ptr(weak_ptr<T> & other) {
-      m_pointer = other.m_pointer;
-      m_counter = other.m_counter;
-    }
-    weak_ptr<T>& operator=(weak_ptr<T> & other) {
-      m_pointer = other.m_pointer;
-      m_counter = other.m_counter;
-      return *this;
-    }
-
-    // Define the move constructor and operator
-    weak_ptr(weak_ptr<T> && other) {
-      m_pointer = other.m_pointer;
-      other.m_pointer = nullptr;
-    }
-
-    weak_ptr<T>& operator=(weak_ptr<T> && other) {
-      m_pointer = other.m_pointer;
-      other.m_pointer = nullptr;
-      return *this;
-    }
-
-   private:
-    T* m_pointer;
-    counter* m_counter;
-  };
-
-  struct Node {
-    Node() { std::cout << "Creating new Node\n"; }
-    ~Node() { std::cout << "Destroying Node\n"; }
-
-    shared_ptr<Node> next;
-    weak_ptr<Node> previous;
-  };
-
-  int main() {
-    auto initial = shared_ptr<Node>(new Node());
-    auto next = shared_ptr<Node>(new Node());
-    initial.get()->next = next;
-    initial.get()->next.get()->previous = initial;
   }
+
+  ~weak_ptr() = default;
+
+  T* get() { return m_pointer; }
+
+  // Define the copy constructor and operator
+  weak_ptr(weak_ptr<T>& other) {
+    m_pointer = other.m_pointer;
+    m_counter = other.m_counter;
+  }
+  weak_ptr<T>& operator=(weak_ptr<T>& other) {
+    m_pointer = other.m_pointer;
+    m_counter = other.m_counter;
+    return *this;
+  }
+
+  // Define the move constructor and operator
+  weak_ptr(weak_ptr<T>&& other) {
+    m_pointer = other.m_pointer;
+    other.m_pointer = nullptr;
+  }
+
+  weak_ptr<T>& operator=(weak_ptr<T>&& other) {
+    m_pointer = other.m_pointer;
+    other.m_pointer = nullptr;
+    return *this;
+  }
+
+ private:
+  T* m_pointer;
+  counter* m_counter;
+};
+
+struct Node {
+  Node() { std::cout << "Creating new Node\n"; }
+  ~Node() { std::cout << "Destroying Node\n"; }
+
+  shared_ptr<Node> next;
+  weak_ptr<Node> previous;
+};
+
+int main() {
+  auto initial = shared_ptr<Node>(new Node());
+  auto next = shared_ptr<Node>(new Node());
+  initial.get()->next = next;
+  initial.get()->next.get()->previous = initial;
+}
 ```
 
 This gives us the desired result.
