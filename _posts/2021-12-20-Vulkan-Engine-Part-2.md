@@ -3,13 +3,13 @@ layout: post
 title: Vulkan Engine - Part 2
 ---
 
-In the previous part we covered the basic setup of Vulkan and compiled our first Vulkan example using Bazel. In this second part we will connect Vulkan to [GLFW](!https://www.glfw.org), an open source API which allows you to easily create windows and integrate them with Vulkan. There are alternatives (such as SDL), however I found that GLFW works well, is well supported and rather simple in use.
+In the previous part we covered the basic setup of Vulkan and compiled our first Vulkan example using Bazel. In this second part we will connect Vulkan to [GLFW](https://www.glfw.org), an open source API which allows you to easily create windows and integrate them with Vulkan. There are alternatives (such as SDL), however I found that GLFW works well, is well supported and rather simple in use.
 
 ## Adding non-Bazel targets to Bazel project
 One of the main drawbacks of Bazel is that it is not as widely supported as its alternatives (such as CMake). However, it is possible to add non-Bazel targets to your Bazel project. We need to write custom Bazel rules to do this. There are also alternatives we will explore in future parts to save some time here.
 
 ## Writing custom Bazel rules
-Let's start by writing some custom Bazel rules. Since GLFW is an third party library, we will create a folder called `third_party`. In this folder, create a new build file called `glfw.BUILD`. For reference, these Bazel rules are based off [this](!https://github.com/pbellis/bazel-glfw) and [this repository](!https://github.com/siggb/glfw-bazel-xcode). I have altered them a little bit as they do not support mac OS.
+Let's start by writing some custom Bazel rules. Since GLFW is a third party library, we will create a folder called `third_party`. In this folder, create a new build file called `glfw.BUILD`. For reference, these Bazel rules are based off [this](https://github.com/pbellis/bazel-glfw) and [this repository](https://github.com/siggb/glfw-bazel-xcode). I have altered them a little bit as they do not support mac OS.
 
 ```python
 load("@rules_cc//cc:defs.bzl", "cc_library", "objc_library")
