@@ -53,7 +53,7 @@ baseurl: ""
 # !! You don't need to change any of the configuration flags below !!
 #
 
-permalink: /:title/
+permalink: /:categories/:title/
 
 # The release of Jekyll Now that you're using
 version: v1.2.0
@@ -77,9 +77,13 @@ gems:
   - jekyll-sitemap # Create a sitemap using the official Jekyll sitemap gem
   - jekyll-feed # Create an Atom feed using the official Jekyll feed gem
   - jekyll-seo-tag
+  - jekyll-category-pages
+  - jekyll-paginate
 
 plugins:
   - jekyll-seo-tag
+  - jekyll-category-pages
+  - jekyll-paginate
 
 # Exclude these files from your production _site
 exclude:

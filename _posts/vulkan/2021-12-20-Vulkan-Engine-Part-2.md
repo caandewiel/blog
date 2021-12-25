@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Vulkan Engine - Part 2
+category: vulkan
 ---
 
 In the previous part we covered the basic setup of Vulkan and compiled our first Vulkan example using Bazel. In this second part we will connect Vulkan to [GLFW](https://www.glfw.org), an open source API which allows you to easily create windows and integrate them with Vulkan. There are alternatives (such as SDL), however I found that GLFW works well, is well supported and rather simple in use.

@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Vulkan Engine - Part 1
+category: vulkan
 ---
 
 When it comes to computer science, computer graphics has always been one of my favorite topics. Initially I started off with playing around in OpenGL, but as soon as I discovered what Vulkan was, I had to try it.
