@@ -1,11 +1,10 @@
 ---
 layout: default
 ---
-  <!-- Pagination is not active -->
-<h1>{{ page.title | capitalize }}</h1>
+{% include breadcrumbs.html %}
 
 <div class="posts">
-  {% for post in page.posts %}
+  {% for post in site.categories[page.category_name] %}
     <article class="post">
 
       <h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>

@@ -53,6 +53,9 @@ baseurl: ""
 # !! You don't need to change any of the configuration flags below !!
 #
 
+paginate: 5 # amount of posts to show
+paginate_path: /page:num/
+
 permalink: /:categories/:title/
 
 # The release of Jekyll Now that you're using
@@ -76,7 +79,6 @@ plugins:
   - jekyll-sitemap # Create a sitemap using the official Jekyll sitemap gem
   - jekyll-feed # Create an Atom feed using the official Jekyll feed gem
   - jekyll-seo-tag
-  - jekyll-category-pages
   - jekyll-paginate
 
 # Exclude these files from your production _site
@@ -85,3 +87,10 @@ exclude:
   - LICENSE
   - README.md
   - CNAME
+
+category_archive:
+  type: liquid
+  path: /categories/
+
+include:
+  - _categories
