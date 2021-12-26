@@ -40,7 +40,7 @@ Running this piece of code results in the following output. We can see here that
 
 Since C++ 11, we have smart pointers to take care of freeing up memory for us! When it comes to smart pointers, it’s intuitive to think of ownerships. But what does it mean for an instance to *own* another instance? Say we have an instance `a` which is the owner of instance `b`. Then instance `b` can never outlive instance `a`. In other words, when instance `a` is destroyed, instance `b` is destroyed as well.
 
-**Unique pointers**
+## Unique pointers
 
 The first smart pointer we will cover is a unique pointer, defined by `std::unique_ptr<T>`. A unique pointer is, as the name describes, a pointer that can only be owned by one instance. In order to visualize this a bit more, let’s define two structs `A` and `B`.
 
@@ -71,7 +71,7 @@ Here instance `b` of type `B` has an attribute `a` of type `std::unique_ptr<A>`.
 
 We can see that *without* calling the `delete` function on `a`, the destructor is still called. This is extremely useful when your codebase becomes larger and it gets harder to keep track of all pointers you have floating around.
 
-**So how does this work internally?**
+## So how does this work internally?
 
 It might sound complicated, but actually, it is a very simple yet powerful concept. Here is an extremely simplified implementation of the unique pointer.
 
@@ -89,7 +89,7 @@ class unique_ptr {
 
 We can immediately spot one serious vulnerability here. You can actually instantiate a unique pointer on the heap as well (e.g. `new std::unique_ptr<A>(new A())`). You **never** want to do this! This will prevent the internal pointer from actually being freed as its destructor will not automatically be called when it gets out of scope. Remember to **always** allocate smart pointers on the stack!
 
-**Can’t we just copy smart pointers?**
+## Can’t we just copy smart pointers?
 
 Yes and no! Well, actually no. Theoretically it is possible, but C++ explicitly prevents us from doing that. Let’s first analyze why we do not want to do this. We can actually demonstrate this with the rough implementation we wrote before.
 
@@ -168,7 +168,7 @@ auto a = unique_ptr<A>(new A());
 auto b = std::move(a);
 ```
 
-**Shared pointers**
+## Shared pointers
 
 Next to unique pointers, there are also shared pointers. They are almost identical to unique pointers, but there is one important difference! As the name describes here as well, shared pointers can have **multiple** owners. The difference implementation wise is that shared pointers **can** be copied. However, in order to know when we need to free our internal pointer, we should keep track of how many active owners we have. We can do this by creating a counter we share between our different shared pointers. Once we create a new shared pointer, we increase this counter and vice versa. Once this counter hits 0, we free both the internal pointer and the counter.
 
@@ -256,7 +256,7 @@ auto b = a;
 > Destroying A
 ```
 
-**Weak pointers**
+## Weak pointers
 
 The weak pointer is the last type of smart pointer we find in C++. A weak pointer is in fact just a shared pointer which does not increase the internal counter. Weak pointers have many different use cases, but let’s take cyclic dependency as an example to demonstrate how weak pointers work. Let’s take the classic example of a doubly linked list here. This means that each element in the list should have the pointer for the next element, but also for the previous element. 
 
@@ -352,7 +352,7 @@ This gives us the desired result.
 > Destroying Node
 ```
 
-**Conclusion**
+## Conclusion
 
 In this overview we have analyzed the three different smart pointers in C++, namely unique, shared and weak pointers. We showed how smart pointers are an extremely helpful tool in preventing memory leaks. Last but not least, we implemented our own simplified versions of all three smart pointers to get a grasp of how they work internally and what kind of overhead you can expect.
 

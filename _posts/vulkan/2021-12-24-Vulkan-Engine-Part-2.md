@@ -12,6 +12,7 @@ One of the main drawbacks of Bazel is that it is not as widely supported as its 
 ## Writing custom Bazel rules
 Let's start by writing some custom Bazel rules. Since GLFW is a third party library, we will create a folder called `third_party`. In this folder, create a new build file called `glfw.BUILD`. For reference, these Bazel rules are based off [this](https://github.com/pbellis/bazel-glfw) and [this repository](https://github.com/siggb/glfw-bazel-xcode). I have altered them a little bit as they do not support mac OS.
 
+### Bazel rules for GLFW
 ```python
 load("@rules_cc//cc:defs.bzl", "cc_library", "objc_library")
 
