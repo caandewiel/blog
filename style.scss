@@ -302,6 +302,10 @@ footer {
   
   -webkit-user-select: none;
   user-select: none;
+
+  @include mobile {
+    display: none;
+  }
 }
 
 #menuToggle a
@@ -313,15 +317,13 @@ footer {
   transition: transform 250ms;
   display:inline-block;
 
-  font-family: BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+  // font-family: BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
   font-size: 14px;
 }
 
 #menuToggle a:hover
 {
   transform: translateX(10px);
-  // transform: scale(1.2);
-  // color: tomato;
 }
 
 
@@ -410,13 +412,13 @@ footer {
 #menu
 {
   float: none;
-  position: absolute;
   width: 300px;
   margin: -100px 0 0 -50px;
   padding: 50px;
   padding-top: 125px;
   
-  background: #ededed;
+  // background: #ededed;
+  background: #fff;
   list-style-type: none;
   -webkit-font-smoothing: antialiased;
   /* to stop flickering of text in safari */
@@ -435,13 +437,13 @@ footer {
 }
 
 #menu ul {
-  height: 1000px;
+  // height: 1000px;
   list-style-type: none;
 }
 
 #menu li
 {
-  padding: 10px 0;
+  padding: 5px 0;
   font-size: 22px;
 }
 
