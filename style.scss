@@ -65,11 +65,21 @@ h4 {
   color: $gray;
 }
 
-p {
+p, tr {
   margin: 15px 0;
   line-height: 1.7;
   font-size: 16px;
   color: #404040;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+th {
+  margin: 15px 0;
+  line-height: 1.7;
+  font-size: 16px;
+  font-weight: bold;
+  color: $darkerGray;
   text-rendering: auto;
   -webkit-font-smoothing: antialiased;
 }
