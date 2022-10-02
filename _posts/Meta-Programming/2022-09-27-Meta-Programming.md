@@ -32,7 +32,7 @@ template <typename T> void tuple_for_each(T t) {
 Or is it? Actually, no, it is not! See how the index `I` in `std::get<I>` is a template parameter? This means that `I` should be known during compile time and currently we are determining `I` during runtime.
 
 ## Iterating during compile time
-The solution here is template metaprogramming! Using template metaprogramming we can loop over specific datatypes during compile time whereas a generic for-loop in C++ will only function during runtime.
+The solution here is template metaprogramming! Using template metaprogramming, we can loop over specific datatypes during compile time whereas a generic for-loop in C++ will only function during runtime.
 
 I hear you ask, if I cannot use a for-loop to iterate, how am I going to iterate over the data structure then? Well, that's where recursion comes into play. Let's use the following setup that allows us to loop over the values in a tuple and prints them.
 
@@ -117,3 +117,46 @@ foo@bar:~$ ./example
 i - 0
 f - 0
 ```
+
+## Static Polymorphism
+Another application of template metaprogramming is static polymorphism. Let's first address what static polymorphism is and why we would want it in the first place.
+
+In order to understand static polymorphism, we should first understand dynamic polymorphism. Let's take the following simple C++ example:
+
+```cpp
+struct A {
+  virtual void fn() = 0;
+};
+
+struct B : public A {
+  int fn() override { return 4; }
+};
+
+int main() {
+  auto b = std::make_unique<B>();
+  b->fn();
+}
+```
+This example shows dynamic polymorphism, meaning that the call to `fn` introduces additional instructions to query the vtable during runtime to fetch the correct function pointer. This might be problematic when dealing with cases where low latency is of utmost importance.
+
+When using templates, we can write it statically like this:
+```cpp
+template <class Derived> struct A {
+  int fn() { return static_cast<Derived *>(this)->fn_impl(); }
+};
+
+struct B : A<B> {
+  int fn_impl() { return 4; }
+};
+
+int main() {
+  auto a = std::make_unique<B_Static>();
+  a->fn();
+
+  return 0;
+}
+```
+Here we use templates to avoid using virtual functions so there will be no overhead caused by the vtable. Note however, that this is *only* possible when you know which derived class is being used during compile-time as this is required by templates.
+
+## References
+- https://en.wikipedia.org/wiki/Template_metaprogramming
